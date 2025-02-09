@@ -7,18 +7,26 @@ export const CURRENCIES = {
   AUD: { symbol: 'A$', name: 'Australian Dollar' },
   CAD: { symbol: 'C$', name: 'Canadian Dollar' },
   CNY: { symbol: '¥', name: 'Chinese Yuan' },
-  INR: { symbol: '₹', name: 'Indian Rupee' }
+  INR: { symbol: '₹', name: 'Indian Rupee' },
+  SEK: { symbol: 'kr', name: 'Swedish Krona' },
+  DKK: { symbol: 'kr', name: 'Danish Krone' },
+  NOK: { symbol: 'kr', name: 'Norwegian Krone' },
+  VND: { symbol: '₫', name: 'Vietnamese Dong' }
 };
 
 export const MOCK_EXCHANGE_RATES = {
   USD: 1,
-  EUR: 0.85,
-  GBP: 0.73,
-  JPY: 110.0,
-  AUD: 1.35,
-  CAD: 1.25,
-  CNY: 6.45,
-  INR: 73.5
+  EUR: 0.92,
+  GBP: 0.79,
+  JPY: 150.41,
+  AUD: 1.52,
+  CAD: 1.35,
+  CNY: 7.19,
+  INR: 83.12,
+  SEK: 10.42,
+  DKK: 6.86,
+  NOK: 10.51,
+  VND: 24565
 };
 
 export const convertToBaseCurrency = (amount: number, fromCurrency: string, baseCurrency: string): number => {
