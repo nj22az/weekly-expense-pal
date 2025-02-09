@@ -6,6 +6,29 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const CURRENCIES = {
+  USD: { symbol: '$', name: 'US Dollar' },
+  EUR: { symbol: '€', name: 'Euro' },
+  GBP: { symbol: '£', name: 'British Pound' },
+  JPY: { symbol: '¥', name: 'Japanese Yen' },
+  AUD: { symbol: 'A$', name: 'Australian Dollar' },
+  CAD: { symbol: 'C$', name: 'Canadian Dollar' },
+  CNY: { symbol: '¥', name: 'Chinese Yuan' },
+  INR: { symbol: '₹', name: 'Indian Rupee' }
+};
+
+// Mock exchange rates - in a production app, you'd fetch these from an API
+const MOCK_EXCHANGE_RATES = {
+  USD: 1,
+  EUR: 0.85,
+  GBP: 0.73,
+  JPY: 110.0,
+  AUD: 1.35,
+  CAD: 1.25,
+  CNY: 6.45,
+  INR: 73.5
+};
+
 const ExpenseTracker = () => {
   const [expenses, setExpenses] = useState(() => {
     const saved = localStorage.getItem('concur-expenses');
@@ -15,8 +38,13 @@ const ExpenseTracker = () => {
       description: '',
       category: '',
       amount: '',
+      currency: 'USD',
       notes: ''
     }];
+  });
+
+  const [baseCurrency, setBaseCurrency] = useState(() => {
+    return localStorage.getItem('concur-base-currency') || 'USD';
   });
 
   const [reportName, setReportName] = useState(() => {
@@ -26,7 +54,22 @@ const ExpenseTracker = () => {
   useEffect(() => {
     localStorage.setItem('concur-expenses', JSON.stringify(expenses));
     localStorage.setItem('concur-report-name', reportName);
-  }, [expenses, reportName]);
+    localStorage.setItem('concur-base-currency', baseCurrency);
+  }, [expenses, reportName, baseCurrency]);
+
+  const convertToBaseCurrency = (amount: number, fromCurrency: string) => {
+    if (!amount) return 0;
+    const fromRate = MOCK_EXCHANGE_RATES[fromCurrency];
+    const toRate = MOCK_EXCHANGE_RATES[baseCurrency];
+    return (amount / fromRate) * toRate;
+  };
+
+  const calculateTotal = () => {
+    return expenses.reduce((sum, expense) => {
+      const amount = parseFloat(expense.amount) || 0;
+      return sum + convertToBaseCurrency(amount, expense.currency);
+    }, 0);
+  };
 
   const addExpense = () => {
     const newExpense = {
@@ -35,6 +78,7 @@ const ExpenseTracker = () => {
       description: '',
       category: '',
       amount: '',
+      currency: baseCurrency,
       notes: ''
     };
     setExpenses([...expenses, newExpense]);
@@ -53,12 +97,14 @@ const ExpenseTracker = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Category', 'Description', 'Amount', 'Notes'];
+    const headers = ['Date', 'Category', 'Description', 'Amount', 'Currency', 'Amount in ' + baseCurrency, 'Notes'];
     const rows = expenses.map(expense => [
       expense.date,
       expense.category,
       expense.description,
       expense.amount,
+      expense.currency,
+      convertToBaseCurrency(parseFloat(expense.amount) || 0, expense.currency).toFixed(2),
       expense.notes
     ]);
     
@@ -84,9 +130,23 @@ const ExpenseTracker = () => {
           <Badge variant="outline" className="text-sm font-normal">
             Weekly Overview
           </Badge>
-          <Badge variant="secondary" className="text-sm font-normal">
-            Total: ${expenses.reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0).toFixed(2)}
-          </Badge>
+          <div className="flex items-center gap-4">
+            <select
+              value={baseCurrency}
+              onChange={(e) => setBaseCurrency(e.target.value)}
+              className="px-2 py-1 border dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-800/50"
+            >
+              {Object.entries(CURRENCIES).map(([code, { name }]) => (
+                <option key={code} value={code}>
+                  {code} - {name}
+                </option>
+              ))}
+            </select>
+            <Badge variant="secondary" className="text-sm font-normal">
+              Total: {CURRENCIES[baseCurrency].symbol}
+              {calculateTotal().toFixed(2)}
+            </Badge>
+          </div>
         </div>
         <CardTitle>
           <input
@@ -161,15 +221,32 @@ const ExpenseTracker = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">Amount ($)</label>
-                    <input
-                      type="number"
-                      value={expense.amount}
-                      onChange={(e) => handleChange(expense.id, 'amount', e.target.value)}
-                      className="w-full p-2.5 border dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-shadow"
-                      step="0.01"
-                      min="0"
-                    />
+                    <label className="block text-sm font-medium mb-2 text-gray-600 dark:text-gray-400">Amount</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={expense.currency}
+                        onChange={(e) => handleChange(expense.id, 'currency', e.target.value)}
+                        className="w-24 p-2.5 border dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-shadow"
+                      >
+                        {Object.keys(CURRENCIES).map((code) => (
+                          <option key={code} value={code}>{code}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={expense.amount}
+                        onChange={(e) => handleChange(expense.id, 'amount', e.target.value)}
+                        className="flex-1 p-2.5 border dark:border-gray-700 rounded-lg bg-white/50 dark:bg-gray-800/50 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-shadow"
+                        step="0.01"
+                        min="0"
+                      />
+                    </div>
+                    {expense.amount && expense.currency !== baseCurrency && (
+                      <p className="mt-1 text-sm text-gray-500">
+                        ≈ {CURRENCIES[baseCurrency].symbol}
+                        {convertToBaseCurrency(parseFloat(expense.amount), expense.currency).toFixed(2)} {baseCurrency}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
