@@ -1,0 +1,16 @@
+{
+  "name": "Expense Tracker",
+  "short_name": "Expenses",
+  "description": "Track your expenses across multiple currencies",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0369a1",
+  "icons": [
+    {
+      "src": "./app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 
