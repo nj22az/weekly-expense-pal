@@ -7,7 +7,7 @@ const NavHeader: React.FC = () => {
         <div className="flex items-center justify-center space-x-3">
           <div className="relative">
             <img 
-              src="./assets/images/a.jpeg" 
+              src="/weekly-expense-pal/assets/images/a.jpeg" 
               alt="Office Logo" 
               className="w-12 h-12 rounded-2xl object-cover shadow-sm transform transition-transform hover:scale-105"
               style={{
