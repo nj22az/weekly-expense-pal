@@ -9,6 +9,10 @@ export default defineConfig({
     port: 8080,
   },
   base: '/weekly-expense-pal/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+  },
   plugins: [react()],
   resolve: {
     alias: {
